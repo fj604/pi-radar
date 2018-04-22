@@ -31,7 +31,7 @@ class AircraftMarker(MapMarkerPopup):
 
 class RadarMapView(MapView):
 
-    def __init__(self, lat=51.5, lon=0, zoom=8, url="http://localhost/dump1090/data/aircraft.json"):
+    def __init__(self, lat=51.5, lon=0, zoom=8, url="http://localhost/dump1090/data/aircraft.json", interval=1):
         self.aircraft_layer = MarkerMapLayer()
         self.update_in_progress = False
         self.list_of_tracked_aircraft = []
@@ -40,7 +40,7 @@ class RadarMapView(MapView):
         super().__init__(lat=lat, lon=lon, zoom=zoom)
         self.add_layer(self.aircraft_layer)
         self.update_aircraft(0)
-        Clock.schedule_interval(self.update_aircraft, 1)
+        Clock.schedule_interval(self.update_aircraft, interval)
 
     def update_aircraft(self, time):
         if self.update_in_progress:
