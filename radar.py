@@ -46,7 +46,6 @@ class RadarApp(App):
         list_of_aircraft = list_aircraft(self.url)
 
         # Update tracked aircraft and mark stale ones as inactive
-
         for a_tracked_aircraft in self.list_of_tracked_aircraft:
             aircraft_active = False
             for an_aircraft in list_of_aircraft:
