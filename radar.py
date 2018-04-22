@@ -1,11 +1,10 @@
 from aircraft import list_aircraft
-from kivy.garden.mapview import MapView, MapLayer, MapMarker, MarkerMapLayer, MapMarkerPopup
+from kivy.garden.mapview import MapView, MarkerMapLayer, MapMarkerPopup
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.bubble import Bubble
 from kivy.clock import Clock
-from kivy.graphics import Rotate
-import argparse
+from kivy.base import runTouchApp
 
 
 class Aircraft:
@@ -30,14 +29,18 @@ class AircraftMarker(MapMarkerPopup):
             self.full_label = False
 
 
-class RadarApp(App):
+class RadarMapView(MapView):
 
-    def __init__(self, zoom=8, lat=0, lon=0, url="http://localhost/dump1090/data/aircraft.json"):
-        self.zoom = zoom
-        self.lat = lat
-        self.lon = lon
+    def __init__(self, lat=51.5, lon=0, zoom=8, url="http://localhost/dump1090/data/aircraft.json"):
+        self.aircraft_layer = MarkerMapLayer()
+        self.update_in_progress = False
+        self.list_of_tracked_aircraft = []
+        self.aircraft_markers = []
         self.url = url
-        super().__init__()
+        super().__init__(lat=lat, lon=lon, zoom=zoom)
+        self.add_layer(self.aircraft_layer)
+        self.update_aircraft(0)
+        Clock.schedule_interval(self.update_aircraft, 1)
 
     def update_aircraft(self, time):
         if self.update_in_progress:
@@ -123,12 +126,12 @@ class RadarApp(App):
                 marker.lon = a_tracked_aircraft.data["lon"]
                 print("Tracked aircraft data:", a_tracked_aircraft.data)
                 if not has_marker:
-                    self.mapview.add_marker(
+                    self.add_marker(
                         a_tracked_aircraft.marker, layer=self.aircraft_layer)
             else:
                 if has_marker:
                     print("Removing marker:", a_tracked_aircraft.hex)
-                    self.mapview.remove_marker(a_tracked_aircraft.marker)
+                    self.remove_marker(a_tracked_aircraft.marker)
                     delattr(a_tracked_aircraft, "marker")
                 if not active:
                     print("Lost contact:", a_tracked_aircraft.hex)
@@ -136,19 +139,6 @@ class RadarApp(App):
         self.aircraft_layer.reposition()
         self.update_in_progress = False
 
-    def build(self):
-
-        self.aircraft_layer = MarkerMapLayer()
-        self.update_in_progress = False
-        self.list_of_tracked_aircraft = []
-        self.aircraft_markers = []
-
-        self.mapview = MapView(zoom=self.zoom, lat=self.lat, lon=self.lon)
-        self.mapview.add_layer(self.aircraft_layer)
-        self.update_aircraft(0)
-        Clock.schedule_interval(self.update_aircraft, 1)
-        return self.mapview
-
 
 if __name__ == "__main__":
-    RadarApp().run()
+    runTouchApp(RadarMapView())

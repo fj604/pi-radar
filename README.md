@@ -11,8 +11,10 @@ Dependencies:
 Usage:
 
 ````
-from radar import RadarApp
-RadarApp(zoom=8, lat=51.44, lon=-1.02, url="http://192.168.1.222/dump1090/data/aircraft.json").run()
+from radar import RadarMapView
+from kivy.app import runTouchApp
+
+runTouchApp(RadarMapView(zoom=8, lat=51.44, lon=-1.03, url="http://192.168.1.222/dump1090/data/aircraft.json"))
 ````
 
 Tap on any aircraft icon once to show the callsign and again to show altitude, rate of climb, speed and track.
