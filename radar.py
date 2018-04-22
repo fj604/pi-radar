@@ -118,7 +118,7 @@ class RadarApp(App):
                     else:
                         marker.popup_size = (80, 25)
 
-                marker.source = "yellow/plane{}.png".format(
+                marker.source = "icons/plane{}.png".format(
                     round(a_tracked_aircraft.data["track"]/10)*10)
                 marker.lat = a_tracked_aircraft.data["lat"]
                 marker.lon = a_tracked_aircraft.data["lon"]
