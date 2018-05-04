@@ -1,11 +1,10 @@
-from aircraft import list_aircraft
 from kivy.garden.mapview import MapView, MarkerMapLayer, MapMarkerPopup
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.bubble import Bubble
 from kivy.clock import Clock
 from kivy.base import runTouchApp
-
+from kivy.network.urlrequest import UrlRequest
 
 class Aircraft:
     pass
@@ -39,14 +38,16 @@ class RadarMapView(MapView):
         self.url = url
         super().__init__(lat=lat, lon=lon, zoom=zoom)
         self.add_layer(self.aircraft_layer)
-        self.update_aircraft(0)
-        Clock.schedule_interval(self.update_aircraft, interval)
+        Clock.schedule_interval(self.request_update, interval)
 
-    def update_aircraft(self, time):
+    def request_update(self, time):
+        UrlRequest(self.url, on_success=self.update_aircraft)
+
+    def update_aircraft(self, request, result):
         if self.update_in_progress:
             return
         self.update_in_progress = True
-        list_of_aircraft = list_aircraft(self.url)
+        list_of_aircraft = result["aircraft"]
 
         # Update tracked aircraft and mark stale ones as inactive
         for a_tracked_aircraft in self.list_of_tracked_aircraft:
@@ -71,7 +72,6 @@ class RadarMapView(MapView):
                 a_tracked_aircraft.active = True
                 a_tracked_aircraft.data = an_aircraft
                 self.list_of_tracked_aircraft.append(a_tracked_aircraft)
-                print("New track:", a_tracked_aircraft.data)
 
         # Set up markers
         for a_tracked_aircraft in self.list_of_tracked_aircraft:
@@ -124,17 +124,14 @@ class RadarMapView(MapView):
                     round(a_tracked_aircraft.data["track"]/10)*10)
                 marker.lat = a_tracked_aircraft.data["lat"]
                 marker.lon = a_tracked_aircraft.data["lon"]
-                print("Tracked aircraft data:", a_tracked_aircraft.data)
                 if not has_marker:
                     self.add_marker(
                         a_tracked_aircraft.marker, layer=self.aircraft_layer)
             else:
                 if has_marker:
-                    print("Removing marker:", a_tracked_aircraft.hex)
                     self.remove_marker(a_tracked_aircraft.marker)
                     delattr(a_tracked_aircraft, "marker")
                 if not active:
-                    print("Lost contact:", a_tracked_aircraft.hex)
                     self.list_of_tracked_aircraft.remove(a_tracked_aircraft)
         self.aircraft_layer.reposition()
         self.update_in_progress = False
